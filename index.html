@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画师网名生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#faf8f5;--card:#fff;--accent:#8b7355;--accent2:#c4956a;--text:#2d2a26;--muted:#9a948b;--border:#e8e2da;--tag-bg:#f0ebe4;--shadow:0 2px 12px rgba(0,0,0,.06)}
+body{font-family:"Noto Serif SC",-apple-system,"PingFang SC","Hiragino Sans GB",serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.hero{text-align:center;padding:60px 20px 30px;max-width:640px}
+.hero h1{font-size:2rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px}
+.hero p{color:var(--muted);font-size:.95rem;line-height:1.6}
+.input-wrap{display:flex;gap:10px;max-width:520px;width:100%;margin:30px auto 0;padding:0 20px}
+.input-wrap input{flex:1;padding:14px 20px;border:2px solid var(--border);border-radius:12px;font-size:1rem;font-family:inherit;background:var(--card);transition:border .2s;outline:none}
+.input-wrap input:focus{border-color:var(--accent)}
+.input-wrap input::placeholder{color:var(--muted)}
+.btn{padding:14px 28px;border:none;border-radius:12px;font-size:1rem;font-family:inherit;cursor:pointer;transition:all .2s;font-weight:600}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(139,115,85,.25)}
+.btn-primary:active{transform:translateY(0)}
+.results{max-width:800px;width:100%;padding:20px;margin-top:20px}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:0 4px}
+.results-header h2{font-size:1.1rem;font-weight:600}
+.btn-regen{background:var(--tag-bg);color:var(--accent);padding:8px 18px;border-radius:8px;font-size:.9rem}
+.btn-regen:hover{background:var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:var(--card);border-radius:14px;padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;animation:fadeUp .4s ease both;cursor:default;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-name{font-size:1.35rem;font-weight:700;letter-spacing:.03em;word-break:break-all}
+.card-bottom{display:flex;justify-content:space-between;align-items:center}
+.tag{font-size:.75rem;color:var(--accent);background:var(--tag-bg);padding:3px 10px;border-radius:20px;white-space:nowrap}
+.copy-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.78rem;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.copied{border-color:#6b9e6b;color:#6b9e6b}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:.95rem}
+.footer{text-align:center;padding:40px 20px 30px;color:var(--muted);font-size:.8rem;margin-top:auto}
+@media(max-width:540px){.hero h1{font-size:1.5rem}.input-wrap{flex-direction:column}.grid{grid-template-columns:1fr 1fr}.card-name{font-size:1.15rem}}
+@media(max-width:360px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>画师网名生成器</h1>
+<p>输入关键词，生成red风网名</p>
+</div>
+<div class="input-wrap">
+<input type="text" id="keyword" placeholder="输入关键词" autocomplete="off">
+<button class="btn btn-primary" id="genBtn" onclick="generate()">生成网名</button>
+</div>
+<div class="results" id="results"></div>
+<script>
+const P={
+nature:'山,川,月,星,雪,雨,风,云,花,林,森,泉,湖,海,野,春,夏,秋,冬,霜,露,岚,溪,潮,霞,汐,岸,渊,崖,谷'.split(','),
+animal:'猫,猫,猫,猫,猫,鱼,鱼,鱼,兔,兔,狗,狗,喵,喵,鹿,鹤,鸢,雁,燕,狐,鲸,蝶,雀,鸦'.split(','),
+food:'桃,莓,梅,栗,柠,橘,柚,椰,芒,茶,酒,糖,饼,奶,果,酱,豆,薯,瓜,杏,梨,荔,葡,枣,藕'.split(','),
+foodL:'布丁,果冻,抹茶,咖啡,牛乳,蛋糕,吐司,麻薯,可颂,铜锣烧,年糕,红豆,芝士,焦糖,蜜桃,草莓'.split(','),
+foodS:'酱,子,丸,饼,糕,仙,屋,铺,罐,盒'.split(','),
+adj:'速冻的,缺水的,透明的,迷路的,过期的,碎裂的,融化的,漂浮的,沉睡的,发光的,野生的,走丢的,隐形的,失重的,冒泡的,半熟的,退役的,离线的,限量版,翻转的'.split(','),
+noun:'星星,柠檬,雪球,信号,灯泡,罐头,气泡,云朵,贝壳,烟花,纽扣,拼图,书签,陨石,水母,蘑菇,仙人掌,调色盘,铅笔头'.split(','),
+cls:'汀,柒,沐,翎,澜,琅,珩,栖,忱,昀,霁,筱,煦,瑾,岑,祁,琰,璃,鸢,枫,溪,岚,黛,霜,棠,荻,蘅,芷,蕊,萤,楹,槿,薇,萱,茉,檀,梧,杳,晏,宸,墨,砚,笙,箫,琴,瑟,筝,棣,蓁,簪'.split(','),
+enS:'er,uu,chan,san,ko,maru,ya,lin,rin,ki,mi,kko,tte'.split(','),
+cute:'桃,莓,团,圆,糖,奶,饼,豆,咩,喵,嘟,咕,泡,棉,绒,芋,栗,柚,糯,软'.split(','),
+cuteS:'酱,子,白,仙,丸,团,包,球'.split(','),
+px:'策,猹,笑,茶,默,端,晨,宁,辰,橙,蛮,呆,柒,枣,鱼,虎,葵,梨,萌,栗'.split(','),
+color:'白,黑,灰,银,青,碧,绯,苍,赤,墨,绿,蓝,紫,金,橙'.split(','),
+hTpl:['{Y}不想{X}','{Y}已弃治','{Y}不太行','{Y}别{X}了','{Y}又在{X}','{Y}今天{X}','假装是{Y}','{Y}摆烂中','{Y}不干了','{Y}想开了','{Y}在逃','摆烂的{Y}','{Y}不营业','{Y}吃饱了','{Y}关机了'],
+hX:'画画,起床,早睡,上班,出门,减肥,赶稿,社交,努力,运动,学习,做饭,背单词,冒泡,发呆,摆烂,吃土,喃喃'.split(','),
+eng:{cat:'猫',dog:'狗',star:'星',moon:'月',snow:'雪',rain:'雨',flower:'花',sea:'海',forest:'林',sky:'天',sun:'日',fire:'火',ice:'冰',cloud:'云',fish:'鱼',bird:'鸟',fox:'狐',deer:'鹿',bear:'熊',wolf:'狼',dream:'梦',wind:'风',night:'夜',spring:'春',summer:'夏',autumn:'秋',winter:'冬',water:'水',mountain:'山',river:'川',tea:'茶',peach:'桃',art:'画',ink:'墨',blue:'蓝',red:'红',white:'白',black:'黑',gold:'金',silver:'银',purple:'紫',green:'绿'}
+};
+function R(a){return a[Math.random()*a.length|0]}
+function sh(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[b[i],b[j]]=[b[j],b[i]]}return b}
+function tr(k){const l=k.toLowerCase().trim();if(P.eng[l])return P.eng[l];for(const[a,b]of Object.entries(P.eng)){if(l.includes(a))return b}return k}
+function pick(k){if(!k)return '';return k[Math.random()*k.length|0]}
+const G=[
+{l:'古风二字',f:k=>{let a=pick(k)||R(P.cls),b=R(P.cls);while(b===a)b=R(P.cls);return a+b}},
+{l:'古风二字',f:k=>(pick(k)||R(P.cls))+R(P.nature)},
+{l:'自然·动物',f:k=>(pick(k)||R(P.nature))+R(P.nature)+R(P.animal)},
+{l:'自然·动物',f:k=>R(P.color)+(pick(k)||R(P.nature))+R(P.animal)},
+{l:'自然·动物',f:k=>R(P.animal)+'无'+(pick(k)||R(P.nature))},
+{l:'食物组合',f:k=>{const c=pick(k)||R(P.food);return c+c+R(P.foodS)}},
+{l:'食物组合',f:k=>R(P.food)+(pick(k)||R(P.food))+R(P.foodL)},
+{l:'食物组合',f:k=>(pick(k)||R(P.foodL))+R(P.food)+R(P.foodS)},
+{l:'自嘲句式',f:k=>{const t=R(P.hTpl);return t.replace('{Y}',pick(k)||R(P.hY)).replace('{X}',R(P.hX))}},
+{l:'自嘲句式',f:k=>R(P.hTpl).replace('{Y}',pick(k)||R(P.hY)).replace('{X}',R(P.hX))},
+];
+function clip(s){return s.length>12?s.slice(0,12):s}
+function gen(raw){
+  let kw=raw.trim();
+  if(/^[a-zA-Z\s]+$/.test(kw))kw=tr(kw);
+  const top4=['古风二字','自然·动物','食物组合','自嘲句式'];
+  const res=[],used=new Set();
+  for(const cat of top4){
+    const pool=sh(G.filter(g=>g.l===cat));
+    for(const g of pool){
+      const n=clip(g.f(kw||''));
+      if(n.length>=2&&!used.has(n)){used.add(n);res.push({name:n,label:g.l});break}
+    }
+  }
+  return res;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function generate(){
+  const kw=document.getElementById('keyword').value;
+  const items=gen(kw);
+  const el=document.getElementById('results');
+  if(!items.length){el.innerHTML='<div class="empty">输入关键词试试看 ✨</div>';return}
+  let h='<div class="results-header"><h2>为你生成了 '+items.length+' 个网名</h2>';
+  h+='<button class="btn btn-regen" onclick="generate()">🎲 换一批</button></div><div class="grid">';
+  items.forEach((it,i)=>{
+    const n=esc(it.name);
+    h+='<div class="card" style="animation-delay:'+(i*.04)+'s">';
+    h+='<div class="card-name">'+n+'</div>';
+    h+='<div class="card-bottom"><span class="tag">'+esc(it.label)+'</span>';
+    h+='<button class="copy-btn" onclick="cp(this)" data-n="'+n+'">📋 复制</button></div></div>';
+  });
+  el.innerHTML=h+'</div>';
+}
+function cp(btn){
+  navigator.clipboard.writeText(btn.dataset.n).then(()=>{
+    btn.textContent='✅ 已复制';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 复制';btn.classList.remove('copied')},1500);
+  });
+}
+document.getElementById('keyword').addEventListener('keydown',e=>{if(e.key==='Enter')generate()});
+generate();
+</script>
+</body>
+</html>
